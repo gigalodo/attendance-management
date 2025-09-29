@@ -1,0 +1,97 @@
+/* 外側の背景 */
+body {
+    background-color: #f6f6f9;
+}
+
+/* コンテナ */
+.attendance-detail {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 30px;
+}
+
+/* タイトル */
+.attendance-detail__title {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    border-left: 4px solid #000;
+    padding-left: 10px;
+    color: #222;
+}
+
+/* テーブル */
+.attendance-detail__table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.attendance-detail__table th,
+.attendance-detail__table td {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.attendance-detail__table th {
+    width: 20%;
+    font-weight: normal;
+    background-color: #fff;
+    color: #666;
+    text-align: left;
+}
+
+.attendance-detail__table td {
+    color: #333;
+}
+
+/* 値を太字 */
+.attendance-detail__value {
+    font-weight: bold;
+    color: #000;
+}
+
+/* 入力欄 */
+.attendance-detail__input {
+    width: 100px;
+    padding: 6px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    text-align: center;
+    color: #000;
+    font-weight: bold;
+}
+
+.attendance-detail__textarea {
+    width: 100%;
+    min-height: 60px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    resize: vertical;
+    color: #000;
+}
+
+/* ボタン */
+.attendance-detail__actions {
+    text-align: right;
+    margin-top: 20px;
+}
+
+.attendance-detail__button {
+    background: #000;
+    color: #fff;
+    font-size: 16px;
+    padding: 10px 25px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.attendance-detail__button:hover {
+    background: #333;
+}
