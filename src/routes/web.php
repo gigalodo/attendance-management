@@ -12,6 +12,8 @@ use App\Http\Controllers\Admin\StampCorrectionRequestController as AdminRequestC
 use App\Http\Controllers\Admin\StaffController;
 
 
+use App\Models\Attendance;
+
 use Illuminate\Http\Request;
 /*
 |--------------------------------------------------------------------------
@@ -24,11 +26,8 @@ use Illuminate\Http\Request;
 |
 */
 
-Route::get('/', function () {
-    return view('index');
-});
 
-// Route::get('/', [ItemController::class, 'index']);
+Route::get('/', [AuthController::class, 'login']);
 
 Route::post('/register', [AuthController::class, 'authenticate']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -37,7 +36,7 @@ Route::post('/admin/login', [AuthController::class, 'adminLogin']);
 Route::get('/admin/login', [AuthController::class, 'showAdminLogin']);
 
 
-
+// Route::post('/logout', [AuthController::class, 'logout']);//うまくログアウトされないのでコメント
 
 
 
@@ -55,7 +54,7 @@ Route::middleware(['auth', 'role:user'])->group(
 
         Route::post('/attendance', [AttendanceController::class, 'storeAttendance']);
 
-        Route::post('/attendance/{attendance}/request_create', [AttendanceController::class, 'storeAttendanceDetail']);
+        // Route::post('/attendance/{attendance}/request_create', [AttendanceController::class, 'storeAttendanceDetail']); //モデル結合でPOSTの場合ルートがうまく動作しない→URLを変える
 
         Route::get('/attendance', [AttendanceController::class, 'attendance']); //勤怠登録画面
 
@@ -93,9 +92,10 @@ Route::middleware(['auth', 'role:admin'])->group(
 
 Route::middleware('auth')->group(
     function () {
-        Route::post('/attendance/{id}', [AttendanceController::class, 'storeAttendanceDetail']);
+        // Route::post('/attendance/{id}', [AttendanceController::class, 'storeAttendanceDetail']);//なぜ動く・・・？
+        // Route::post('/attendance/{attendance}', [AttendanceController::class, 'storeAttendanceDetail']);
 
-        Route::get('/attendance/{attendance}', [AttendanceController::class, 'attendanceDetail']); //勤怠詳細画面
+        // Route::get('/attendance/{attendance}', [AttendanceController::class, 'attendanceDetail']); //勤怠詳細画面
 
         // Route::get('/stamp_correction_request/list', [StampCorrectionRequestController::class, 'requestList']); //申請一覧画面
 
@@ -105,6 +105,35 @@ Route::middleware('auth')->group(
                 return app(AdminRequestController::class)->requestList($request);
             }
             return app(StampCorrectionRequestController::class)->requestList($request);
+        });
+
+        Route::get('/attendance/{attendance}', function (Attendance $attendance) {
+            if (auth()->user()->role === 'admin') {
+                return app(AdminAttendanceController::class)->attendanceDetail($attendance);
+            }
+            return app(AttendanceController::class)->attendanceDetail($attendance);
+        });
+
+        Route::post('/attendance/{attendance}/request_update', function (Attendance $attendance, Request $request) {
+            if (auth()->user()->role === 'admin') {
+                return app(AdminAttendanceController::class)->storeAttendanceDetail($attendance, $request);
+            }
+            return app(AttendanceController::class)->storeAttendanceDetail($attendance, $request);
+        });
+
+
+        Route::get('/attendance', function (Request $request) {
+            if (auth()->user()->role === 'admin') {
+                return app(AdminAttendanceController::class)->attendanceEmpty($request);
+            }
+            return app(AttendanceController::class)->attendanceEmpty($request);
+        });
+
+        Route::post('/attendance/request_create', function (Request $request) {
+            if (auth()->user()->role === 'admin') {
+                return app(AdminAttendanceController::class)->storeAttendanceEmpty($request);
+            }
+            return app(AttendanceController::class)->storeAttendanceEmpty($request);
         });
     }
 );

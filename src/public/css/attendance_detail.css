@@ -95,3 +95,16 @@ body {
 .attendance-detail__button:hover {
     background: #333;
 }
+
+
+
+.attendance__alert--danger {
+    padding: 10px 0;
+    border-color: #f5c2c7;
+    background-color: #f8d7da;
+    color: #842029;
+  }
+  
+  .attendance__alert--danger ul {
+    margin: 0;
+  }

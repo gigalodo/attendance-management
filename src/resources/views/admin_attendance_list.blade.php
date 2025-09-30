@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('css')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="{{ asset('css/admin_attendance_list.css') }}">
 @endsection
 
@@ -13,7 +14,10 @@
         <a href="/admin/attendance/list?date={{$date['before']}}" class="nav-arrow">
             <span class="arrow-icon">←</span><span class="arrow-text">前日</span>
         </a>
-        <input id="date-picker" type="date" value="{{$date['day']}}">
+        <div class="attendance-date-display">
+            <i class="fa-regular fa-calendar-days calendar-icon"></i>
+            <span>{{$date['day']}}</span>
+        </div>
         <a href="/admin/attendance/list?date={{$date['after']}}" class="nav-arrow">
             <span class="arrow-text">翌日</span><span class="arrow-icon">→</span>
         </a>
@@ -42,6 +46,8 @@
                     <td class="text-center">
                         @if($row['attendance'])
                         <a href="/attendance/{{$row['attendance']->id}}">詳細</a>
+                        @else
+                        <a href="/attendance?date={{$date['today']}}&user={{$row['id']}}">詳細修正！</a>
                         @endif
                     </td>
                 </tr>

@@ -19,39 +19,46 @@
                     <img src="{{ asset('images/logo.svg') }}" alt="CoachTechロゴ" class="header__logo-image">
                 </a>
 
+                @auth
                 <nav>
                     <ul class="header__nav">
+                        @if (Auth::user()->role === 'admin')
+                        <li class="header__nav-item">
+                            <a class="header__nav-link" href="/admin/attendance/list">勤怠一覧</a>
+                        </li>
 
+                        <li class="header__nav-item">
+                            <a class="header__nav-link" href="/admin/staff/list">スタッフ一覧</a>
+                        </li>
+
+                        <li class="header__nav-item">
+                            <a class="header__nav-link" href="/stamp_correction_request/list">申請一覧</a>
+                        </li>
+
+                        @elseif (Auth::user()->role === 'user')
                         <li class="header__nav-item">
                             <a class="header__nav-link" href="/attendance">勤怠</a>
                         </li>
 
                         <li class="header__nav-item">
-                            <a class="header__nav-link--sell" href="/attendance/list">勤怠一覧</a>
+                            <a class="header__nav-link" href="/attendance/list">勤怠一覧</a>
                         </li>
 
                         <li class="header__nav-item">
-                            <a class="header__nav-link--sell" href="/stamp_correction_request/list">申請</a>
+                            <a class="header__nav-link" href="/stamp_correction_request/list">申請</a>
                         </li>
+                        @endif
 
-                        @if (Auth::check())
                         <li class="header__nav-item">
                             <form class="header__nav-form" action="/logout" method="post">
                                 @csrf
                                 <button class="header__nav-button">ログアウト</button>
                             </form>
                         </li>
-                        @else
-                        <li class="header__nav-item">
-                            <a href="/login">
-                                <button class="header__nav-button">ログイン</button>
-                            </a>
-                        </li>
-                        @endif
 
                     </ul>
                 </nav>
-
+                @endauth
             </div>
         </div>
     </header>

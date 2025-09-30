@@ -70,4 +70,16 @@ class AuthController extends Controller
     {
         return view('auth.admin_login');
     }
+
+    // public function logout(LoginRequest $request)
+    // {
+
+    //     dd("aaa");
+    //     Auth::guard('web')->logout();
+
+    //     $request->session()->invalidate();
+    //     $request->session()->regenerateToken();
+
+    //     return redirect('/login');
+    // }
 }

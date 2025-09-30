@@ -10,8 +10,24 @@
 
     @php $index = 0; @endphp
 
-    <form action="/attendance/{{$attendance['id']}}/request_create" method="POST">
+    @if ($errors->any())
+    <div class="attendance__alert--danger">
+        <ul>
+            @foreach ($errors->all() as $error)
+            <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+    @endif
+
+    <form action="{{ $attendance['id']
+    ? /attendance/{{$attendance['id']}}/request_update 
+    : /attendance/request_create }}"
+        method="POST">
         @csrf
+
+        <input type="hidden" name="date" value="">
+
         <table class="attendance-detail__table">
             <tr>
                 <th>名前</th>
@@ -45,11 +61,17 @@
             </tr>
             <tr>
                 <th>備考</th>
-                <td colspan="3"><textarea class="attendance-detail__textarea">{{$attendance['comments']}}</textarea></td>
+                <td colspan="3"><textarea name="comments" class="attendance-detail__textarea">{{$attendance['comments']}}</textarea></td>
             </tr>
         </table>
         <div class="attendance-detail__actions">
+            @if($attendance['is_approved'])
+            <button type="submit" class="attendance-detail__button" disabled>承認済み</button>
+            @elseif($attendance['is_request'])
+            <p>*承認待ちのため修正はできません。</p>
+            @else
             <button type="submit" class="attendance-detail__button">修正</button>
+            @endif
         </div>
     </form>
 </div>

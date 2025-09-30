@@ -46,15 +46,6 @@
     font-family: "Arial Black", sans-serif;
 }
 
-
-.attendance-nav input[type="date"] {
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 6px 12px;
-    font-size: 1rem;
-    color: #000;
-}
-
 .attendance-table {
     width: 100%;
     border-collapse: collapse;
@@ -89,4 +80,20 @@
     text-align: center;
     padding: 20px;
     color: #777;
+}
+
+.attendance-date-display {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    line-height: 1.4; 
+}
+
+.attendance-date-display .calendar-icon {
+    font-size: 18px; 
+    color: #555;
+    vertical-align: middle;
 }

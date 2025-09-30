@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\Attendance;
 use App\Models\Intermission;
 
+use App\Http\Requests\AttendanceRequest;
+
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
@@ -233,6 +235,7 @@ class AttendanceController extends Controller
     {
 
         $attendance->load('intermissions');
+
         $intermissions = $attendance->intermissions->map(
             function ($intermission) {
                 return [
@@ -250,6 +253,8 @@ class AttendanceController extends Controller
             'start_at'    => Carbon::parse($attendance->start_at)->format('H:i'),
             'finish_at'   => $attendance->finish_at ? Carbon::parse($attendance->finish_at)->format('H:i') : null,
             'comments' => $attendance->comments,
+            'is_request' => $attendance->is_request,
+            'is_approved' => $attendance->is_approved,
         ];
 
         return view('attendance_detail', compact('attendance', 'intermissions'));
@@ -259,6 +264,12 @@ class AttendanceController extends Controller
 
     public function storeAttendanceDetail(Attendance $attendance, Request $request)
     {
+
+        $attendanceRequest = AttendanceRequest::createFrom($request);
+        $attendanceRequest->setContainer(app())->setRedirector(app('redirect'));
+
+        $validated = $attendanceRequest->validateResolved();
+
         //値のチェック＋エラーの場合にエラーメッセージを返す
         //全部消して入れなおす！！！→必要なし　新規レコードの為  現在の休憩最大数＋１だと少ない場合がないか・・・？
         // $intermissions = Intermission::where('attendance_id', $attendance->id)->get();
@@ -272,7 +283,7 @@ class AttendanceController extends Controller
             'user_id' => Auth::id(),
             // 'start_at' => Carbon::parse($attendance->start_at)->format('Y-m-d ') . $request->attendance_start_at . ":00",
             'start_at' =>  Carbon::parse($attendance->start_at)->setTimeFromTimeString($request->attendance_start_at),
-            'finish_at' =>  Carbon::parse($attendance->finish_at)->setTimeFromTimeString($request->attendance_finish_at),
+            'finish_at' =>  Carbon::parse($attendance->start_at)->setTimeFromTimeString($request->attendance_finish_at),
             'status' => Attendance::STATUS_FINISHED,
             'is_request' => true,
             'is_approved' => false,
@@ -280,15 +291,28 @@ class AttendanceController extends Controller
         ]);
 
         // 開始・終了nullで入る場合がある・・・・？→バリデーションチェックでNG →NGはNG　4つの欄のうち２，３個使うって言うのは普通にあり得るため
-        foreach ($request->input('intermissions') as $intermission) {
-            if ($intermission['start_at'] && $intermission['finish_at']) {
-                Intermission::create([
-                    'attendance_id' => $attendance_record->id,
-                    'start_at' =>  Carbon::parse($attendance->start_at)->setTimeFromTimeString($intermission['start_at']),
-                    'finish_at' => Carbon::parse($attendance->finish_at)->setTimeFromTimeString($intermission['finish_at']),
-                ]);
+        if ($request->input('intermissions')) {
+            foreach ($request->input('intermissions') as $intermission) {
+                if ($intermission['start_at'] && $intermission['finish_at']) {
+                    Intermission::create([
+                        'attendance_id' => $attendance_record->id,
+                        'start_at' =>  Carbon::parse($attendance->start_at)->setTimeFromTimeString($intermission['start_at']),
+                        'finish_at' => Carbon::parse($attendance->start_at)->setTimeFromTimeString($intermission['finish_at']),
+                    ]);
+                }
             }
         }
+
+        //GPT提案
+        // collect($request->input('intermissions', []))
+        //     ->filter(fn($i) => filled($i['start_at']) && filled($i['finish_at']))
+        //     ->each(function ($i) use ($attendance_record, $attendance) {
+        //         Intermission::create([
+        //             'attendance_id' => $attendance_record->id,
+        //             'start_at' => Carbon::parse($attendance->start_at)->setTimeFromTimeString($i['start_at']),
+        //             'finish_at' => Carbon::parse($attendance->start_at)->setTimeFromTimeString($i['finish_at']),
+        //         ]);
+        //     });
 
 
         return redirect('/attendance/list');

@@ -5,16 +5,16 @@
 @endsection
 
 @section('content')
-<div class="attendance-page">
+<div class="staff-page">
 
-    <h1 class="attendance-title">スタッフ一覧</h1>
+    <h1 class="staff-title">スタッフ一覧</h1>
 
-    <div class="attendance-card">
-        <table class="attendance-table">
+    <div class="staff-card">
+        <table class="staff-table">
             <thead>
                 <tr>
                     <th>名前</th>
-                    <th>メールアドレス </th>
+                    <th>メールアドレス</th>
                     <th>月次勤怠</th>
                 </tr>
             </thead>
@@ -24,7 +24,7 @@
                     <td>{{ $user->name }}</td>
                     <td>{{ $user->email }}</td>
                     <td class="text-center">
-                        <a href="/admin/attendance/staff/{{$user->id}}">詳細</a>
+                        <a href="/admin/attendance/staff/{{$user->id}}" class="detail-link">詳細</a>
                     </td>
                 </tr>
                 @endforeach

@@ -8,11 +8,98 @@ use App\Models\User;
 use App\Models\Attendance;
 use App\Models\Intermission;
 
+use App\Http\Requests\AttendanceRequest;
+
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
 class AttendanceController extends Controller
 {
+    
+    public function storeAttendanceEmpty(Request $request)
+    {
+
+        $date = Carbon::parse($request->start_at);
+
+        $attendanceRequest = AttendanceRequest::createFrom($request);
+        $attendanceRequest->setContainer(app())->setRedirector(app('redirect'));
+
+        $validated = $attendanceRequest->validateResolved();
+
+        //備考カラム追加！！！comments　request->trueに！！ attendance_finish_at
+        // $attendance_record = Attendance::update([
+        $attendance = Attendance::create([
+            'user_id' => $request->id,
+
+            'start_at' =>  Carbon::parse($attendance->start_at)->setTimeFromTimeString($request->attendance_start_at),
+            'finish_at' =>  Carbon::parse($attendance->start_at)->setTimeFromTimeString($request->attendance_finish_at),
+            'status' => Attendance::STATUS_FINISHED,
+            'is_request' => false,
+            'is_approved' => false,
+            'comments' => $request->comments,
+        ]);
+
+        $intermissions = Intermission::where('attendance_id', $attendance->id)->get();
+
+        foreach ($intermissions as $intermission) {
+            $intermission->delete();
+        }
+
+        // 開始・終了nullで入る場合がある・・・・？→バリデーションチェックでNG →NGはNG　4つの欄のうち２，３個使うって言うのは普通にあり得るため
+        if ($request->input('intermissions')) {
+            foreach ($request->input('intermissions') as $intermission) {
+                if ($intermission['start_at'] && $intermission['finish_at']) {
+                    Intermission::create([
+                        'attendance_id' => $attendance->id,
+                        'start_at' =>  Carbon::parse($attendance->start_at)->setTimeFromTimeString($intermission['start_at']),
+                        'finish_at' => Carbon::parse($attendance->start_at)->setTimeFromTimeString($intermission['finish_at']),
+                    ]);
+                }
+            }
+        }
+
+        return redirect('/admin/attendance/list');
+    }
+
+
+    public function attendanceEmpty(Request $request)
+    {
+
+
+
+        if (!$request->user) {
+            return back();
+        }
+        $user = User::find($request->user);
+
+
+        if (!$user) {
+            return back();
+        }
+
+        $date = $request->filled('date')
+            ? Carbon::parse($request->date)
+            : Carbon::now();
+
+        $intermissions = [];
+
+        $attendance = [
+            'id' => null,
+            'user_id' => $user->id,
+            'name' => $user->name,
+            // 'name' => Auth::user()->name,
+            'year' => Carbon::parse($date)->format('Y年'),
+            'date' => Carbon::parse($date)->format('n月j日'),
+            'start_at'    => null,
+            'finish_at'   => null,
+            'comments' => null,
+            'is_request' => false,
+            'is_approved' => false,
+        ];
+
+        return view('attendance_detail', compact('attendance', 'intermissions'));
+    }
+
 
     public function index(Request $request)
     {
@@ -44,6 +131,7 @@ class AttendanceController extends Controller
                     'break'  => '',
                     'work'   => '',
                     'attendance' => null,
+                    'id' => $user->id,
                 ];
             }
 
@@ -73,13 +161,15 @@ class AttendanceController extends Controller
                 'break'  => $breakFormatted,
                 'work'   => $workFormatted,
                 'attendance' => $attendance,
+                'id' => $user->id,
             ];
         });
 
         $date = [
-            'day' => $date->toDateString(),
+            'day' => $date->format('Y/m/d'),
             'before' => $date->copy()->subDay()->toDateString(),
             'after' => $date->copy()->addDay()->toDateString(),
+            'today' => $date->toDateString(),
             'str' => $date->format('Y年n月j日'),
         ];
         // dd($date);
@@ -167,5 +257,80 @@ class AttendanceController extends Controller
 
         // return view('attendance_list', compact('month', 'attendances'));
         return view('admin_attendance_staff', compact('user', 'month', 'attendances'));
+    }
+
+
+    public function attendanceDetail(Attendance $attendance)
+    {
+
+        $attendance->load('intermissions');
+        $intermissions = $attendance->intermissions->map(
+            function ($intermission) {
+                return [
+                    'start_at'    => Carbon::parse($intermission->start_at)->format('H:i'),
+                    'finish_at'   => $intermission->finish_at ? Carbon::parse($intermission->finish_at)->format('H:i') : null,
+                ];
+            }
+        );
+
+        $attendance = [
+            'id' => $attendance->id,
+            'name' => $attendance->user->name,
+            'year' => Carbon::parse($attendance->start_at)->format('Y年'),
+            'date' => Carbon::parse($attendance->start_at)->format('n月j日'),
+            'start_at'    => Carbon::parse($attendance->start_at)->format('H:i'),
+            'finish_at'   => $attendance->finish_at ? Carbon::parse($attendance->finish_at)->format('H:i') : null,
+            'comments' => $attendance->comments,
+            'is_request' => $attendance->is_request,
+            'is_approved' => $attendance->is_approved,
+        ];
+
+        return view('attendance_detail', compact('attendance', 'intermissions'));
+    }
+
+
+
+    public function storeAttendanceDetail(Attendance $attendance, Request $request)
+    {
+
+
+        $attendanceRequest = AttendanceRequest::createFrom($request);
+        $attendanceRequest->setContainer(app())->setRedirector(app('redirect'));
+
+        $validated = $attendanceRequest->validateResolved();
+
+        //備考カラム追加！！！comments　request->trueに！！ attendance_finish_at
+        // $attendance_record = Attendance::update([
+        $attendance->update([
+            'user_id' => $attendance->user->id,
+            // 'start_at' => Carbon::parse($attendance->start_at)->format('Y-m-d ') . $request->attendance_start_at . ":00",
+            'start_at' =>  Carbon::parse($attendance->start_at)->setTimeFromTimeString($request->attendance_start_at),
+            'finish_at' =>  Carbon::parse($attendance->start_at)->setTimeFromTimeString($request->attendance_finish_at),
+            'status' => Attendance::STATUS_FINISHED,
+            'is_request' => false,
+            'is_approved' => false,
+            'comments' => $request->comments,
+        ]);
+
+        $intermissions = Intermission::where('attendance_id', $attendance->id)->get();
+
+        foreach ($intermissions as $intermission) {
+            $intermission->delete();
+        }
+
+        // 開始・終了nullで入る場合がある・・・・？→バリデーションチェックでNG →NGはNG　4つの欄のうち２，３個使うって言うのは普通にあり得るため
+        if ($request->input('intermissions')) {
+            foreach ($request->input('intermissions') as $intermission) {
+                if ($intermission['start_at'] && $intermission['finish_at']) {
+                    Intermission::create([
+                        'attendance_id' => $attendance->id,
+                        'start_at' =>  Carbon::parse($attendance->start_at)->setTimeFromTimeString($intermission['start_at']),
+                        'finish_at' => Carbon::parse($attendance->start_at)->setTimeFromTimeString($intermission['finish_at']),
+                    ]);
+                }
+            }
+        }
+
+        return redirect('/admin/attendance/list');
     }
 }
