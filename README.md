@@ -18,9 +18,12 @@ Laravel環境構築
 
 ## テストアカウント
 -  name: 管理者ユーザ
+-  url:http://localhost/admin/login
 -  email: admin@example.com
 -  password: password
+ 
 -  name: 一般ユーザ
+-  url:http://localhost/login
 -  email: user@example.com
 -  password: password
 
