@@ -37,22 +37,33 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($attendances as $attendance)
+                @foreach($rows as $row)
                 <tr>
-                    <td>{{ $attendance['date'] }}</td>
-                    <td>{{ $attendance['start_at'] }}</td>
-                    <td>{{ $attendance['finish_at'] }}</td>
-                    <td>{{ $attendance['rest_at'] }}</td>
-                    <td>{{ $attendance['total_at'] }}</td>
+                    <td>{{ $row['date'] }}</td>
+                    <td>{{ $row['start_at'] }}</td>
+                    <td>{{ $row['finish_at'] }}</td>
+                    <td>{{ $row['rest_at'] }}</td>
+                    <td>{{ $row['total_at'] }}</td>
                     <td class="text-center">
-                        @if($attendance['id'])
-                        <a href="/attendance/{{ $attendance['id'] }}">詳細</a>
+                        @if($row['id'])
+                        <a href="/attendance/{{ $row['id'] }}">詳細</a>
+                        @else
+                        <a href="/attendance?date={{$row['today']}}&user={{$user->id}}">詳細修正！</a>
                         @endif
                     </td>
                 </tr>
                 @endforeach
             </tbody>
         </table>
+    </div>
+
+    <div class="export-form">
+        <form action="/export" method="post">
+            @csrf
+            <input class="export__btn btn" type="submit" value="CSV出力">
+            <input type="hidden" name="user_id" value="{{$user->id}}">
+            <input type="hidden" name="month" value="{{$month['this_month']}}">
+        </form>
     </div>
 
 </div>

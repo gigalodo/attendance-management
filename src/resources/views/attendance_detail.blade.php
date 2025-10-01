@@ -20,13 +20,14 @@
     </div>
     @endif
 
-    <form action="{{ $attendance['id']
-    ? /attendance/{{$attendance['id']}}/request_update 
-    : /attendance/request_create }}"
+    <form action="{{ $attendance['id'] 
+    ? '/attendance/' . $attendance['id'] . '/request_update' 
+    : '/attendance/request_create' }}"
         method="POST">
         @csrf
 
-        <input type="hidden" name="date" value="">
+        <input type="hidden" name="date" value="{{isSet($date)?$date:''}}">
+        <input type="hidden" name="user_id" value="{{isSet($attendance['user_id'])?$attendance['user_id']:''}}">
 
         <table class="attendance-detail__table">
             <tr>

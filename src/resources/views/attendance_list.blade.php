@@ -38,16 +38,18 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse($attendances as $attendance)
+                @forelse($rows as $row)
                 <tr>
-                    <td>{{ $attendance['date'] }}</td>
-                    <td>{{ $attendance['start_at'] }}</td>
-                    <td>{{ $attendance['finish_at'] }}</td>
-                    <td>{{ $attendance['rest_at'] }}</td>
-                    <td>{{ $attendance['total_at'] }}</td>
+                    <td>{{ $row['date'] }}</td>
+                    <td>{{ $row['start_at'] }}</td>
+                    <td>{{ $row['finish_at'] }}</td>
+                    <td>{{ $row['rest_at'] }}</td>
+                    <td>{{ $row['total_at'] }}</td>
                     <td class="text-center">
-                        @if($attendance['id'])
-                        <a href="/attendance/{{ $attendance['id'] }}">詳細</a>
+                        @if($row['id'])
+                        <a href="/attendance/{{ $row['id'] }}">詳細</a>
+                        @else
+                        <a href="/attendance?date={{$row['today']}}">詳細修正！</a>
                         @endif
                     </td>
                 </tr>

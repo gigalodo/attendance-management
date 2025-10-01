@@ -13,37 +13,148 @@ use App\Http\Requests\AttendanceRequest;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
+
+use Illuminate\Support\Facades\Date;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+
 class AttendanceController extends Controller
 {
-    
+
+    public function export(Request $request)
+    {
+
+        // $month = $request->filled('month')
+        //     ? Carbon::parse($request->month)
+        //     : Carbon::now();
+
+        //$request->month //2025-10-01 $request->user_id //5
+        $month = Carbon::parse($request->month);
+
+        //kokokara
+
+        $startOfMonth = $month->copy()->startOfMonth();
+        $endOfMonth = $month->copy()->endOfMonth();
+
+
+        $rawAttendances = Attendance::where('user_id', $request->user_id)
+            ->where('is_request', false)
+            ->whereBetween('start_at', [$startOfMonth, $endOfMonth])
+            ->with('intermissions')
+            ->get()
+            ->keyBy(function ($attendance) {
+                return Carbon::parse($attendance->start_at)->toDateString(); // "2025-09-01" の形式
+            });
+
+
+        // 曜日表示用
+        $weekMap = ['日', '月', '火', '水', '木', '金', '土'];
+
+        // 月の全日付ループ
+        $csvData = [];
+        for ($date = $startOfMonth->copy(); $date->lte($endOfMonth); $date->addDay()) {
+            $dateStr = $date->toDateString();
+            $attendance = $rawAttendances->get($dateStr);
+
+            if ($attendance) {
+                // 勤怠データがある場合
+                $restMinutes = $attendance->intermissions->sum(function ($intermission) {
+                    if ($intermission->finish_at) {
+                        return Carbon::parse($intermission->finish_at)
+                            ->diffInMinutes(Carbon::parse($intermission->start_at));
+                    }
+                    return 0;
+                });
+
+                $workMinutes = $attendance->finish_at
+                    ? Carbon::parse($attendance->finish_at)->diffInMinutes(Carbon::parse($attendance->start_at))
+                    : 0;
+
+                $formatMinutes = function ($minutes) {
+                    $h = floor($minutes / 60);
+                    $m = $minutes % 60;
+                    return sprintf('%d:%02d', $h, $m);
+                };
+
+                $csvData[] = [
+                    'date' => $date->format('m/d') . '(' . $weekMap[$date->dayOfWeek] . ')',
+                    'start_at' => Carbon::parse($attendance->start_at)->format('H:i'),
+                    'finish_at' => $attendance->finish_at ? Carbon::parse($attendance->finish_at)->format('H:i') : '',
+                    'rest_at' => $formatMinutes($restMinutes),
+                    'total_at' => $formatMinutes(max(0, $workMinutes - $restMinutes)),
+                ];
+            } else {
+                $csvData[] = [
+                    'date' => $date->format('m/d') . '(' . $weekMap[$date->dayOfWeek] . ')',
+                    'start_at' => '',
+                    'finish_at' => '',
+                    'rest_at' => '',
+                    'total_at' => '',
+                ];
+            }
+        }
+
+        //kokomade
+
+        // $query = $this->getSearchQuery($request, $query);
+
+        // $csvData = $query->get()->toArray();
+
+        $csvHeader = [
+            '日付',
+            '出勤',
+            '退勤',
+            '休憩',
+            '合計',
+        ];
+
+        $response = new StreamedResponse(function () use ($csvHeader, $csvData) {
+            $createCsvFile = fopen('php://output', 'w');
+
+            mb_convert_variables('SJIS-win', 'UTF-8', $csvHeader);
+
+            fputcsv($createCsvFile, $csvHeader);
+
+            foreach ($csvData as $csv) {
+                mb_convert_variables('SJIS-win', 'UTF-8', $csv);
+                fputcsv($createCsvFile, $csv);
+            }
+
+            fclose($createCsvFile);
+        }, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename=ID' . $request->user_id . "_" . $request->month . ".csv",
+        ]);
+
+        return $response;
+
+
+        // return redirect("/admin/attendance/staff/" . $request->user_id . "?month=" . $request->month);
+    }
+
+
+
     public function storeAttendanceEmpty(Request $request)
     {
 
-        $date = Carbon::parse($request->start_at);
 
         $attendanceRequest = AttendanceRequest::createFrom($request);
         $attendanceRequest->setContainer(app())->setRedirector(app('redirect'));
 
         $validated = $attendanceRequest->validateResolved();
 
-        //備考カラム追加！！！comments　request->trueに！！ attendance_finish_at
+        $date = Carbon::parse($request->date);
+
         // $attendance_record = Attendance::update([
         $attendance = Attendance::create([
-            'user_id' => $request->id,
-
-            'start_at' =>  Carbon::parse($attendance->start_at)->setTimeFromTimeString($request->attendance_start_at),
-            'finish_at' =>  Carbon::parse($attendance->start_at)->setTimeFromTimeString($request->attendance_finish_at),
+            'user_id' => $request->user_id,
+            'start_at' =>  $date->copy()->setTimeFromTimeString($request->attendance_start_at),
+            'finish_at' =>  $date->copy()->setTimeFromTimeString($request->attendance_finish_at),
             'status' => Attendance::STATUS_FINISHED,
             'is_request' => false,
             'is_approved' => false,
             'comments' => $request->comments,
         ]);
 
-        $intermissions = Intermission::where('attendance_id', $attendance->id)->get();
-
-        foreach ($intermissions as $intermission) {
-            $intermission->delete();
-        }
 
         // 開始・終了nullで入る場合がある・・・・？→バリデーションチェックでNG →NGはNG　4つの欄のうち２，３個使うって言うのは普通にあり得るため
         if ($request->input('intermissions')) {
@@ -51,8 +162,8 @@ class AttendanceController extends Controller
                 if ($intermission['start_at'] && $intermission['finish_at']) {
                     Intermission::create([
                         'attendance_id' => $attendance->id,
-                        'start_at' =>  Carbon::parse($attendance->start_at)->setTimeFromTimeString($intermission['start_at']),
-                        'finish_at' => Carbon::parse($attendance->start_at)->setTimeFromTimeString($intermission['finish_at']),
+                        'start_at' =>  $date->copy()->setTimeFromTimeString($intermission['start_at']),
+                        'finish_at' => $date->copy()->setTimeFromTimeString($intermission['finish_at']),
                     ]);
                 }
             }
@@ -65,13 +176,10 @@ class AttendanceController extends Controller
     public function attendanceEmpty(Request $request)
     {
 
-
-
         if (!$request->user) {
             return back();
         }
         $user = User::find($request->user);
-
 
         if (!$user) {
             return back();
@@ -88,8 +196,8 @@ class AttendanceController extends Controller
             'user_id' => $user->id,
             'name' => $user->name,
             // 'name' => Auth::user()->name,
-            'year' => Carbon::parse($date)->format('Y年'),
-            'date' => Carbon::parse($date)->format('n月j日'),
+            'year' => $date->format('Y年'),
+            'date' => $date->format('n月j日'),
             'start_at'    => null,
             'finish_at'   => null,
             'comments' => null,
@@ -97,7 +205,7 @@ class AttendanceController extends Controller
             'is_approved' => false,
         ];
 
-        return view('attendance_detail', compact('attendance', 'intermissions'));
+        return view('attendance_detail', compact('attendance', 'intermissions', 'date'));
     }
 
 
@@ -201,7 +309,7 @@ class AttendanceController extends Controller
         $weekMap = ['日', '月', '火', '水', '木', '金', '土'];
 
         // 月の全日付ループ
-        $attendances = [];
+        $rows = [];
         for ($date = $startOfMonth->copy(); $date->lte($endOfMonth); $date->addDay()) {
             $dateStr = $date->toDateString();
             $attendance = $rawAttendances->get($dateStr);
@@ -226,37 +334,38 @@ class AttendanceController extends Controller
                     return sprintf('%d:%02d', $h, $m);
                 };
 
-                $attendances[] = [
+                $rows[] = [
                     'date' => $date->format('m/d') . '(' . $weekMap[$date->dayOfWeek] . ')',
                     'start_at' => Carbon::parse($attendance->start_at)->format('H:i'),
                     'finish_at' => $attendance->finish_at ? Carbon::parse($attendance->finish_at)->format('H:i') : '',
                     'rest_at' => $formatMinutes($restMinutes),
                     'total_at' => $formatMinutes(max(0, $workMinutes - $restMinutes)),
                     'id' => $attendance->id,
+                    'today' => null,
                 ];
             } else {
-                // 勤怠データがない場合（空白）
-                $attendances[] = [
+                $rows[] = [
                     'date' => $date->format('m/d') . '(' . $weekMap[$date->dayOfWeek] . ')',
                     'start_at' => '',
                     'finish_at' => '',
                     'rest_at' => '',
                     'total_at' => '',
                     'id' => null,
+                    'today' => $date->toDateString(),
                 ];
             }
         }
 
 
         $month = [
-            'day' => $startOfMonth->format('Y-n'),
+            'this_month' => $startOfMonth->format('Y-n'),
             'before' => $startOfMonth->copy()->subMonth()->format('Y-n'),
             'after' => $startOfMonth->copy()->addMonth()->format('Y-n'),
             'str' => $startOfMonth->format('Y/n'),
         ];
 
         // return view('attendance_list', compact('month', 'attendances'));
-        return view('admin_attendance_staff', compact('user', 'month', 'attendances'));
+        return view('admin_attendance_staff', compact('user', 'month', 'rows'));
     }
 
 

@@ -39,10 +39,6 @@ Route::get('/admin/login', [AuthController::class, 'showAdminLogin']);
 // Route::post('/logout', [AuthController::class, 'logout']);//うまくログアウトされないのでコメント
 
 
-
-
-
-
 //一般ユーザー
 Route::middleware(['auth', 'role:user'])->group(
     function () {
@@ -51,12 +47,11 @@ Route::middleware(['auth', 'role:user'])->group(
 
         Route::get('/attendance/list', [AttendanceController::class, 'index']); //勤怠一覧画面
 
-
         Route::post('/attendance', [AttendanceController::class, 'storeAttendance']);
 
         // Route::post('/attendance/{attendance}/request_create', [AttendanceController::class, 'storeAttendanceDetail']); //モデル結合でPOSTの場合ルートがうまく動作しない→URLを変える
 
-        Route::get('/attendance', [AttendanceController::class, 'attendance']); //勤怠登録画面
+        // Route::get('/attendance', [AttendanceController::class, 'attendance']); //勤怠登録画面
 
         // Route::get('/stamp_correction_request/list', [StampCorrectionRequestController::class, 'requestList']); //申請一覧画面
 
@@ -86,6 +81,8 @@ Route::middleware(['auth', 'role:admin'])->group(
         Route::post('/stamp_correction_request/approve/{attendance}', [AdminRequestController::class, 'storeRequestDetail']);
 
         Route::get('/stamp_correction_request/approve/{attendance}', [AdminRequestController::class, 'requestDetail']);
+
+        Route::post('/export', [AdminAttendanceController::class, 'export']);
     }
 );
 
@@ -122,13 +119,28 @@ Route::middleware('auth')->group(
         });
 
 
+        // Route::get('/attendance', function (Request $request) {
+        //     if (auth()->user()->role === 'admin') {
+        //         return app(AdminAttendanceController::class)->attendanceEmpty($request);
+        //     }
+        //     return app(AttendanceController::class)->attendanceEmpty($request);
+        // });
+
         Route::get('/attendance', function (Request $request) {
-            if (auth()->user()->role === 'admin') {
-                return app(AdminAttendanceController::class)->attendanceEmpty($request);
+
+            if ($request->has('date')) {
+                if (auth()->user()->role === 'admin') {
+                    return app(AdminAttendanceController::class)->attendanceEmpty($request);
+                }
+                return app(AttendanceController::class)->attendanceEmpty($request);
+            } else {
+                if (auth()->user()->role === 'user') {
+                    return app(AttendanceController::class)->attendance($request);
+                }
             }
-            return app(AttendanceController::class)->attendanceEmpty($request);
         });
 
+        //モデル結合となぜ重複しないのか・・・・？URL変える？？？
         Route::post('/attendance/request_create', function (Request $request) {
             if (auth()->user()->role === 'admin') {
                 return app(AdminAttendanceController::class)->storeAttendanceEmpty($request);
