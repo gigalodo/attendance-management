@@ -16,13 +16,13 @@ Laravel環境構築
 -  6.php artisan migrate
 -  7.php artisan db:seed
 
-##テストアカウント
-name: 管理者ユーザ
-email: admin@example.com
-password: password
-name: 一般ユーザ
-email: user@example.com
-password: password
+## テストアカウント
+-  name: 管理者ユーザ
+-  email: admin@example.com
+-  password: password
+-  name: 一般ユーザ
+-  email: user@example.com
+-  password: password
 
 ## 使用技術(実行環境)
 -  Laravel 8.83.29
@@ -30,7 +30,7 @@ password: password
 -  mysql 8.0.26
 
 ## ER図
- ![ER図](./src/public/images/attendance.png)
+ ![ER図](./src/public/images/attendances.png)
 
 ## URL
 -  開発環境：http://localhost/
