@@ -24,7 +24,6 @@ class AttendanceRequest extends FormRequest
 
     public function messages()
     {
-
         return [
             'attendance_start_at.required' => '出勤時間は必須です',
             'attendance_start_at.date_format' => '**:**の形式で時間を入力してください',
@@ -58,7 +57,7 @@ class AttendanceRequest extends FormRequest
                     $validator->errors()->add("intermissions.$i.start_at", '休憩時間が不適切な値です');
                 }
 
-                if ($restStart && $startAt && $restStart > $finishAt) {
+                if ($restStart && $finishAt && $restStart > $finishAt) {
                     $validator->errors()->add("intermissions.$i.start_at", '休憩時間が不適切な値です');
                 }
 
@@ -68,6 +67,33 @@ class AttendanceRequest extends FormRequest
 
                 if ($restStart && $restFinish && $restFinish < $restStart) {
                     $validator->errors()->add("intermissions.$i.finish_at", '休憩時間が開始・終了が逆転しています');
+                }
+            }
+
+            $intervals = [];
+            foreach ($rests as $i => $rest) {
+                if (!empty($rest['start_at']) && !empty($rest['finish_at'])) {
+                    $intervals[] = [
+                        'index' => $i,
+                        'start' => $rest['start_at'],
+                        'finish' => $rest['finish_at'],
+                    ];
+                }
+            }
+
+            usort($intervals, function ($a, $b) {
+                return strcmp($a['start'], $b['start']);
+            });
+
+            for ($i = 0; $i < count($intervals) - 1; $i++) {
+                $current = $intervals[$i];
+                $next = $intervals[$i + 1];
+
+                if ($next['start'] < $current['finish']) {
+                    $validator->errors()->add(
+                        "intermissions.{$next['index']}.start_at",
+                        '休憩時間が他と重複しています'
+                    );
                 }
             }
         });

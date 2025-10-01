@@ -23,8 +23,6 @@ use Illuminate\Http\Request;
 |
 */
 
-Route::get('/', [AuthController::class, 'login']);
-
 Route::post('/register', [AuthController::class, 'authenticate']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/admin/login', [AuthController::class, 'adminLogin']);

@@ -40,9 +40,17 @@ class AttendanceController extends Controller
             $fp = fopen('php://output', 'w');
             mb_convert_variables('SJIS-win', 'UTF-8', $csvHeader);
             fputcsv($fp, $csvHeader);
-            foreach ($csvData as $csv) {
-                mb_convert_variables('SJIS-win', 'UTF-8', $csv);
-                fputcsv($fp, $csv);
+            foreach ($csvData as $csvRow) {
+                $values = [
+                    $csvRow['date'] ?? '',
+                    $csvRow['start_at'] ?? '',
+                    $csvRow['finish_at'] ?? '',
+                    $csvRow['rest_at'] ?? '',
+                    $csvRow['total_at'] ?? '',
+                ];
+
+                mb_convert_variables('SJIS-win', 'UTF-8', $values);
+                fputcsv($fp, $values);
             }
             fclose($fp);
         }, 200, [
