@@ -12,8 +12,6 @@ class Attendance extends Model
     const STATUS_RESTING     = 'resting';
     const STATUS_FINISHED    = 'finished';
 
-
-
     use HasFactory;
 
     protected $fillable = [

@@ -49,7 +49,7 @@
                         @if($row['id'])
                         <a href="/attendance/{{ $row['id'] }}">詳細</a>
                         @else
-                        <a href="/attendance?date={{$row['today']}}">詳細修正！</a>
+                        <a href="/attendance?date={{$row['today']}}">詳細</a>
                         @endif
                     </td>
                 </tr>

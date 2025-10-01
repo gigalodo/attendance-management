@@ -20,8 +20,8 @@
     </div>
     @endif
 
-    <form action="{{ $attendance['id'] 
-    ? '/attendance/' . $attendance['id'] . '/request_update' 
+    <form action="{{ $attendance['id']
+    ? '/attendance/' . $attendance['id'] . '/request_update'
     : '/attendance/request_create' }}"
         method="POST">
         @csrf
@@ -42,34 +42,45 @@
             </tr>
             <tr>
                 <th>出勤・退勤</th>
-                <td><input type="text" class="attendance-detail__input attendance-detail__value" name="attendance_start_at" value="{{$attendance['start_at']}}"></td>
+                <td><input type="text" class="attendance-detail__input attendance-detail__value" name="attendance_start_at" value="{{old('attendance_start_at',$attendance['start_at'])}}"></td>
                 <td>～</td>
-                <td><input type="text" class="attendance-detail__input attendance-detail__value" name="attendance_finish_at" value="{{$attendance['finish_at']}}"></td>
+                <td><input type="text" class="attendance-detail__input attendance-detail__value" name="attendance_finish_at" value="{{old('attendance_finish_at',$attendance['finish_at'])}}"></td>
             </tr>
             @foreach($intermissions as $intermission)
             <tr>
-                <th>休憩{{++$index}}</th>
-                <td><input type="text" class="attendance-detail__input attendance-detail__value" name="intermissions[{{$index}}][start_at]" value="{{$intermission['start_at']}}"></td>
+                <th>休憩{{ ++$index }}</th>
+                <td>
+                    <input type="text" class="attendance-detail__input attendance-detail__value"
+                        name="intermissions[{{ $index }}][start_at]"
+                        value="{{ old('intermissions.' . $index . '.start_at', $intermission['start_at']) }}">
+                </td>
                 <td>～</td>
-                <td><input type="text" class="attendance-detail__input attendance-detail__value" name="intermissions[{{$index}}][finish_at]" value="{{$intermission['finish_at']}}"></td>
+                <td>
+                    <input type="text" class="attendance-detail__input attendance-detail__value"
+                        name="intermissions[{{ $index }}][finish_at]"
+                        value="{{ old('intermissions.' . $index . '.finish_at', $intermission['finish_at']) }}">
+                </td>
             </tr>
             @endforeach
             <tr>
-                <th>休憩{{++$index}}</th>
-                <td><input type="text" class="attendance-detail__input attendance-detail__value" name="intermissions[{{$index}}][start_at]" value=""></td>
+            <tr>
+                <th>休憩{{ ++$index }}</th>
+                <td><input type="text" class="attendance-detail__input attendance-detail__value" name="intermissions[{{$index}}][start_at]" value="{{ old('intermissions.' . $index . '.start_at') }}"></td>
                 <td>～</td>
-                <td><input type="text" class="attendance-detail__input attendance-detail__value" name="intermissions[{{$index}}][finish_at]" value=""></td>
+                <td><input type="text" class="attendance-detail__input attendance-detail__value" name="intermissions[{{$index}}][finish_at]" value="{{ old('intermissions.' . $index . '.finish_at') }}"></td>
+            </tr>
+
             </tr>
             <tr>
                 <th>備考</th>
-                <td colspan="3"><textarea name="comments" class="attendance-detail__textarea">{{$attendance['comments']}}</textarea></td>
+                <td colspan="3"><textarea name="comments" class="attendance-detail__textarea">{{old('comments',$attendance['comments'])}}</textarea></td>
             </tr>
         </table>
         <div class="attendance-detail__actions">
             @if($attendance['is_approved'])
-            <button type="submit" class="attendance-detail__button" disabled>承認済み</button>
+            <button type="submit" class="attendance-detail__button--approved" disabled>承認済み</button>
             @elseif($attendance['is_request'])
-            <p>*承認待ちのため修正はできません。</p>
+            <p class="attendance-detail__caution">*承認待ちのため修正はできません。</p>
             @else
             <button type="submit" class="attendance-detail__button">修正</button>
             @endif

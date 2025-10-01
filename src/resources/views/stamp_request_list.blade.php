@@ -6,7 +6,6 @@
 
 @section('content')
 
-
 <div class="request-page">
 
     <h1 class="request-title">申請一覧</h1>

@@ -99,3 +99,19 @@
 .text-center {
     text-align: center;
 }
+
+.export__button{
+    background: #000;
+    color: #fff;
+    font-size: 14px;
+    padding: 6px 30px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+    float: right;
+}
+
+.export__button:hover {
+    background: #333;
+}

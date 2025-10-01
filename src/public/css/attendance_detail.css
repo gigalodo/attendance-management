@@ -1,16 +1,13 @@
-/* 外側の背景 */
 body {
     background-color: #f6f6f9;
 }
 
-/* コンテナ */
 .attendance-detail {
     max-width: 800px;
     margin: 40px auto;
     padding: 30px;
 }
 
-/* タイトル */
 .attendance-detail__title {
     font-size: 20px;
     font-weight: bold;
@@ -20,7 +17,6 @@ body {
     color: #222;
 }
 
-/* テーブル */
 .attendance-detail__table {
     width: 100%;
     border-collapse: collapse;
@@ -48,13 +44,11 @@ body {
     color: #333;
 }
 
-/* 値を太字 */
 .attendance-detail__value {
     font-weight: bold;
     color: #000;
 }
 
-/* 入力欄 */
 .attendance-detail__input {
     width: 100px;
     padding: 6px;
@@ -75,7 +69,6 @@ body {
     color: #000;
 }
 
-/* ボタン */
 .attendance-detail__actions {
     text-align: right;
     margin-top: 20px;
@@ -96,6 +89,16 @@ body {
     background: #333;
 }
 
+.attendance-detail__button--approved{
+    background: #787878;
+    color: #fff;
+    font-size: 16px;
+    padding: 10px 25px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
 
 
 .attendance__alert--danger {
@@ -103,8 +106,12 @@ body {
     border-color: #f5c2c7;
     background-color: #f8d7da;
     color: #842029;
-  }
-  
-  .attendance__alert--danger ul {
+}
+
+.attendance__alert--danger ul {
     margin: 0;
-  }
+}
+
+.attendance-detail__caution{
+    color: #ff0000;
+}

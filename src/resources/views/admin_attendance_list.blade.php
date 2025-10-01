@@ -2,7 +2,7 @@
 
 @section('css')
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="{{ asset('css/admin_attendance_list.css') }}">
+<link rel="stylesheet" href="{{ asset('css/attendance_list.css') }}">
 @endsection
 
 @section('content')
@@ -47,7 +47,7 @@
                         @if($row['attendance'])
                         <a href="/attendance/{{$row['attendance']->id}}">詳細</a>
                         @else
-                        <a href="/attendance?date={{$date['today']}}&user={{$row['id']}}">詳細修正！</a>
+                        <a href="/attendance?date={{$date['today']}}&user={{$row['id']}}">詳細</a>
                         @endif
                     </td>
                 </tr>
@@ -59,7 +59,6 @@
             </tbody>
         </table>
     </div>
-
 </div>
 
 <script>

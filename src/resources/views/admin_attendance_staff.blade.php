@@ -48,7 +48,7 @@
                         @if($row['id'])
                         <a href="/attendance/{{ $row['id'] }}">詳細</a>
                         @else
-                        <a href="/attendance?date={{$row['today']}}&user={{$user->id}}">詳細修正！</a>
+                        <a href="/attendance?date={{$row['today']}}&user={{$user->id}}">詳細</a>
                         @endif
                     </td>
                 </tr>
@@ -60,7 +60,7 @@
     <div class="export-form">
         <form action="/export" method="post">
             @csrf
-            <input class="export__btn btn" type="submit" value="CSV出力">
+            <button type="submit" class="export__button">CSV出力</button>
             <input type="hidden" name="user_id" value="{{$user->id}}">
             <input type="hidden" name="month" value="{{$month['this_month']}}">
         </form>
