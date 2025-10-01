@@ -1,19 +1,16 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\StampCorrectionRequestController;
 
-use App\Http\Controllers\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\Admin\AttendanceController as AdminAttendanceController;
 use App\Http\Controllers\Admin\StampCorrectionRequestController as AdminRequestController;
-
 use App\Http\Controllers\Admin\StaffController;
 
-
 use App\Models\Attendance;
-
 use Illuminate\Http\Request;
 /*
 |--------------------------------------------------------------------------
@@ -26,146 +23,86 @@ use Illuminate\Http\Request;
 |
 */
 
-
 Route::get('/', [AuthController::class, 'login']);
 
-Route::post('/register', [AuthController::class, 'authenticate']);
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/admin/login', [AuthController::class, 'adminLogin']);
-
-Route::get('/admin/login', [AuthController::class, 'showAdminLogin']);
-
+Route::post('/register', [AuthController::class, 'authenticate']); //OK!!!!
+Route::post('/login', [AuthController::class, 'login']); //OK!!!!
+Route::post('/admin/login', [AuthController::class, 'adminLogin']); //OK!!!!
+Route::get('/admin/login', [AuthController::class, 'showAdminLogin']); //OK!!!!
 
 // Route::post('/logout', [AuthController::class, 'logout']);//うまくログアウトされないのでコメント
-
 
 //一般ユーザー
 Route::middleware(['auth', 'role:user'])->group(
     function () {
 
-        Route::post('/attendance/list', [AttendanceController::class, 'storeIndex']);
+        Route::get('/attendance/list', [AttendanceController::class, 'index']); //OK!!!!
 
-        Route::get('/attendance/list', [AttendanceController::class, 'index']); //勤怠一覧画面
-
-        Route::post('/attendance', [AttendanceController::class, 'storeAttendance']);
-
-        // Route::post('/attendance/{attendance}/request_create', [AttendanceController::class, 'storeAttendanceDetail']); //モデル結合でPOSTの場合ルートがうまく動作しない→URLを変える
-
-        // Route::get('/attendance', [AttendanceController::class, 'attendance']); //勤怠登録画面
-
-        // Route::get('/stamp_correction_request/list', [StampCorrectionRequestController::class, 'requestList']); //申請一覧画面
-
-        // Route::post('/stamp_correction_request/list', [StampCorrectionRequestController::class, 'storeRequestList']);
+        Route::post('/attendance', [AttendanceController::class, 'storeAttendance']); //OK!!!!
     }
 );
-
-
-// Route::post('/attendance/{attendance}/update', [AttendanceController::class, 'storeAttendanceDetail']);
 
 //管理者
 Route::middleware(['auth', 'role:admin'])->group(
     function () {
 
-        Route::post('/admin/attendance/list', [AdminAttendanceController::class, 'storeIndex']);
+        Route::get('/admin/attendance/list', [AdminAttendanceController::class, 'index']); //OK!!!!
 
-        Route::get('/admin/attendance/list', [AdminAttendanceController::class, 'index']);
+        Route::get('/admin/staff/list', [StaffController::class, 'index']); //OK!!!!
 
-        Route::get('/admin/attendance/staff/{user}', [AdminAttendanceController::class, 'staffIndex']);
+        Route::get('/admin/attendance/staff/{user}', [AdminAttendanceController::class, 'staffIndex']); //OK!!!!
 
-        Route::get('/admin/staff/list', [StaffController::class, 'index']);
+        Route::post('/stamp_correction_request/approve/{attendance}', [AdminRequestController::class, 'storeRequestDetail']); //OK!!!!
 
-        // Route::get('/stamp_correction_request/list', [AdminRequestController::class, 'requestList']); //申請一覧画面
+        Route::get('/stamp_correction_request/approve/{attendance}', [AdminRequestController::class, 'requestDetail']); //OK!!!!
 
-        // Route::post('/stamp_correction_request/list', [AdminRequestController::class, 'storeRequestList']);
-
-        Route::post('/stamp_correction_request/approve/{attendance}', [AdminRequestController::class, 'storeRequestDetail']);
-
-        Route::get('/stamp_correction_request/approve/{attendance}', [AdminRequestController::class, 'requestDetail']);
-
-        Route::post('/export', [AdminAttendanceController::class, 'export']);
+        Route::post('/export', [AdminAttendanceController::class, 'export']); //OK!!!!
     }
 );
 
-
 Route::middleware('auth')->group(
     function () {
-        // Route::post('/attendance/{id}', [AttendanceController::class, 'storeAttendanceDetail']);//なぜ動く・・・？
-        // Route::post('/attendance/{attendance}', [AttendanceController::class, 'storeAttendanceDetail']);
 
-        // Route::get('/attendance/{attendance}', [AttendanceController::class, 'attendanceDetail']); //勤怠詳細画面
-
-        // Route::get('/stamp_correction_request/list', [StampCorrectionRequestController::class, 'requestList']); //申請一覧画面
-
-        // Route::post('/stamp_correction_request/list', [StampCorrectionRequestController::class, 'storeRequestList']);
         Route::get('/stamp_correction_request/list', function (Request $request) {
             if (auth()->user()->role === 'admin') {
-                return app(AdminRequestController::class)->requestList($request);
+                return app(AdminRequestController::class)->requestList($request); //OK!!!!
             }
-            return app(StampCorrectionRequestController::class)->requestList($request);
+            return app(StampCorrectionRequestController::class)->requestList($request); //OK!!!!
         });
 
         Route::get('/attendance/{attendance}', function (Attendance $attendance) {
             if (auth()->user()->role === 'admin') {
-                return app(AdminAttendanceController::class)->attendanceDetail($attendance);
+                return app(AdminAttendanceController::class)->attendanceDetail($attendance); //OK!!!!
             }
-            return app(AttendanceController::class)->attendanceDetail($attendance);
+            return app(AttendanceController::class)->attendanceDetail($attendance); //OK!!!!
         });
 
         Route::post('/attendance/{attendance}/request_update', function (Attendance $attendance, Request $request) {
             if (auth()->user()->role === 'admin') {
-                return app(AdminAttendanceController::class)->storeAttendanceDetail($attendance, $request);
+                return app(AdminAttendanceController::class)->storeAttendanceDetail($attendance, $request); //OK!!!!
             }
-            return app(AttendanceController::class)->storeAttendanceDetail($attendance, $request);
+            return app(AttendanceController::class)->storeAttendanceDetail($attendance, $request); //OK!!!!
         });
-
-
-        // Route::get('/attendance', function (Request $request) {
-        //     if (auth()->user()->role === 'admin') {
-        //         return app(AdminAttendanceController::class)->attendanceEmpty($request);
-        //     }
-        //     return app(AttendanceController::class)->attendanceEmpty($request);
-        // });
 
         Route::get('/attendance', function (Request $request) {
 
             if ($request->has('date')) {
                 if (auth()->user()->role === 'admin') {
-                    return app(AdminAttendanceController::class)->attendanceEmpty($request);
+                    return app(AdminAttendanceController::class)->attendanceEmpty($request); //OK!!!!
                 }
-                return app(AttendanceController::class)->attendanceEmpty($request);
+                return app(AttendanceController::class)->attendanceEmpty($request); //OK!!!!
             } else {
                 if (auth()->user()->role === 'user') {
-                    return app(AttendanceController::class)->attendance($request);
+                    return app(AttendanceController::class)->attendance($request); //OK!!!!
                 }
             }
         });
 
-        //モデル結合となぜ重複しないのか・・・・？URL変える？？？
         Route::post('/attendance/request_create', function (Request $request) {
             if (auth()->user()->role === 'admin') {
-                return app(AdminAttendanceController::class)->storeAttendanceEmpty($request);
+                return app(AdminAttendanceController::class)->storeAttendanceEmpty($request); //OK!!!!
             }
-            return app(AttendanceController::class)->storeAttendanceEmpty($request);
+            return app(AttendanceController::class)->storeAttendanceEmpty($request); //OK!!!!
         });
     }
 );
-
-
-
-// Route::middleware('auth')->get('/stamp_correction_request/list', function (Request $request) {
-//     if (auth()->user()->role === 'admin') {
-//         return app(\App\Http\Controllers\Admin\StampCorrectionRequestController::class)
-//             ->requestList($request);
-//     }
-//     return app(\App\Http\Controllers\StampCorrectionRequestController::class)
-//         ->requestList($request);
-// });
-
-// Route::middleware(['auth'])->group(function () {
-//     Route::get('/stamp_correction_request/list', function () {
-//         if (auth()->user()->role === 'admin') {
-//             return app(AdminRequestController::class)->requestList();
-//         }
-//         return app(StampCorrectionRequestController::class)->requestList();
-//     });
-// });

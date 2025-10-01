@@ -10,11 +10,7 @@ use App\Models\Intermission;
 
 use App\Http\Requests\AttendanceRequest;
 
-use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
-
-
-use Illuminate\Support\Facades\Date;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AttendanceController extends Controller
@@ -22,12 +18,6 @@ class AttendanceController extends Controller
 
     public function export(Request $request)
     {
-
-        // $month = $request->filled('month')
-        //     ? Carbon::parse($request->month)
-        //     : Carbon::now();
-
-        //$request->month //2025-10-01 $request->user_id //5
         $month = Carbon::parse($request->month);
 
         //kokokara
@@ -39,24 +29,20 @@ class AttendanceController extends Controller
         $rawAttendances = Attendance::where('user_id', $request->user_id)
             ->where('is_request', false)
             ->whereBetween('start_at', [$startOfMonth, $endOfMonth])
-            ->with('intermissions')
+            ->with(['intermissions', 'user'])
             ->get()
             ->keyBy(function ($attendance) {
                 return Carbon::parse($attendance->start_at)->toDateString(); // "2025-09-01" の形式
             });
 
-
-        // 曜日表示用
         $weekMap = ['日', '月', '火', '水', '木', '金', '土'];
 
-        // 月の全日付ループ
         $csvData = [];
         for ($date = $startOfMonth->copy(); $date->lte($endOfMonth); $date->addDay()) {
             $dateStr = $date->toDateString();
             $attendance = $rawAttendances->get($dateStr);
 
             if ($attendance) {
-                // 勤怠データがある場合
                 $restMinutes = $attendance->intermissions->sum(function ($intermission) {
                     if ($intermission->finish_at) {
                         return Carbon::parse($intermission->finish_at)
@@ -94,11 +80,6 @@ class AttendanceController extends Controller
         }
 
         //kokomade
-
-        // $query = $this->getSearchQuery($request, $query);
-
-        // $csvData = $query->get()->toArray();
-
         $csvHeader = [
             '日付',
             '出勤',
@@ -126,17 +107,10 @@ class AttendanceController extends Controller
         ]);
 
         return $response;
-
-
-        // return redirect("/admin/attendance/staff/" . $request->user_id . "?month=" . $request->month);
     }
-
-
 
     public function storeAttendanceEmpty(Request $request)
     {
-
-
         $attendanceRequest = AttendanceRequest::createFrom($request);
         $attendanceRequest->setContainer(app())->setRedirector(app('redirect'));
 
@@ -144,7 +118,6 @@ class AttendanceController extends Controller
 
         $date = Carbon::parse($request->date);
 
-        // $attendance_record = Attendance::update([
         $attendance = Attendance::create([
             'user_id' => $request->user_id,
             'start_at' =>  $date->copy()->setTimeFromTimeString($request->attendance_start_at),
@@ -155,8 +128,6 @@ class AttendanceController extends Controller
             'comments' => $request->comments,
         ]);
 
-
-        // 開始・終了nullで入る場合がある・・・・？→バリデーションチェックでNG →NGはNG　4つの欄のうち２，３個使うって言うのは普通にあり得るため
         if ($request->input('intermissions')) {
             foreach ($request->input('intermissions') as $intermission) {
                 if ($intermission['start_at'] && $intermission['finish_at']) {
@@ -175,12 +146,11 @@ class AttendanceController extends Controller
 
     public function attendanceEmpty(Request $request)
     {
-
         if (!$request->user) {
             return back();
         }
-        $user = User::find($request->user);
 
+        $user = User::find($request->user);
         if (!$user) {
             return back();
         }
@@ -208,23 +178,17 @@ class AttendanceController extends Controller
         return view('attendance_detail', compact('attendance', 'intermissions', 'date'));
     }
 
-
     public function index(Request $request)
     {
-
         $date = $request->filled('date')
             ? Carbon::parse($request->date)
             : Carbon::now();
-
-        // dd($date);
-        //$request->date('date');より安全なのか？？？？？？？？？？？？
-        // $date = $request->date ? $request->date : Carbon::now();
 
         $users = User::where('role', 'user')
             ->with(['attendances' => function ($query) use ($date) {
                 $query->whereDate('start_at', $date)
                     ->where('is_request', false)
-                    ->with('intermissions');
+                    ->with(['intermissions', 'user']);
             }])
             ->get();
 
@@ -280,14 +244,12 @@ class AttendanceController extends Controller
             'today' => $date->toDateString(),
             'str' => $date->format('Y年n月j日'),
         ];
-        // dd($date);
+
         return view('admin_attendance_list', compact('date', 'rows'));
     }
 
-
     public function staffIndex(User $user, Request $request)
     {
-        // 月を取得（リクエスト or 現在）
         $month = $request->filled('month')
             ? Carbon::parse($request->month)
             : Carbon::now();
@@ -295,27 +257,23 @@ class AttendanceController extends Controller
         $startOfMonth = $month->copy()->startOfMonth();
         $endOfMonth = $month->copy()->endOfMonth();
 
-        // 勤怠データ取得（当月分のみ）
         $rawAttendances = Attendance::where('user_id', $user->id)
             ->where('is_request', false)
             ->whereBetween('start_at', [$startOfMonth, $endOfMonth])
-            ->with('intermissions')
+            ->with(['intermissions', 'user'])
             ->get()
             ->keyBy(function ($attendance) {
-                return Carbon::parse($attendance->start_at)->toDateString(); // "2025-09-01" の形式
+                return Carbon::parse($attendance->start_at)->toDateString();
             });
 
-        // 曜日表示用
         $weekMap = ['日', '月', '火', '水', '木', '金', '土'];
 
-        // 月の全日付ループ
         $rows = [];
         for ($date = $startOfMonth->copy(); $date->lte($endOfMonth); $date->addDay()) {
             $dateStr = $date->toDateString();
             $attendance = $rawAttendances->get($dateStr);
 
             if ($attendance) {
-                // 勤怠データがある場合
                 $restMinutes = $attendance->intermissions->sum(function ($intermission) {
                     if ($intermission->finish_at) {
                         return Carbon::parse($intermission->finish_at)
@@ -356,7 +314,6 @@ class AttendanceController extends Controller
             }
         }
 
-
         $month = [
             'this_month' => $startOfMonth->format('Y-n'),
             'before' => $startOfMonth->copy()->subMonth()->format('Y-n'),
@@ -364,15 +321,14 @@ class AttendanceController extends Controller
             'str' => $startOfMonth->format('Y/n'),
         ];
 
-        // return view('attendance_list', compact('month', 'attendances'));
         return view('admin_attendance_staff', compact('user', 'month', 'rows'));
     }
-
 
     public function attendanceDetail(Attendance $attendance)
     {
 
-        $attendance->load('intermissions');
+        $attendance->load(['intermissions', 'user']);
+
         $intermissions = $attendance->intermissions->map(
             function ($intermission) {
                 return [
@@ -397,22 +353,16 @@ class AttendanceController extends Controller
         return view('attendance_detail', compact('attendance', 'intermissions'));
     }
 
-
-
     public function storeAttendanceDetail(Attendance $attendance, Request $request)
     {
-
 
         $attendanceRequest = AttendanceRequest::createFrom($request);
         $attendanceRequest->setContainer(app())->setRedirector(app('redirect'));
 
         $validated = $attendanceRequest->validateResolved();
 
-        //備考カラム追加！！！comments　request->trueに！！ attendance_finish_at
-        // $attendance_record = Attendance::update([
         $attendance->update([
             'user_id' => $attendance->user->id,
-            // 'start_at' => Carbon::parse($attendance->start_at)->format('Y-m-d ') . $request->attendance_start_at . ":00",
             'start_at' =>  Carbon::parse($attendance->start_at)->setTimeFromTimeString($request->attendance_start_at),
             'finish_at' =>  Carbon::parse($attendance->start_at)->setTimeFromTimeString($request->attendance_finish_at),
             'status' => Attendance::STATUS_FINISHED,
@@ -421,13 +371,8 @@ class AttendanceController extends Controller
             'comments' => $request->comments,
         ]);
 
-        $intermissions = Intermission::where('attendance_id', $attendance->id)->get();
+        Intermission::where('attendance_id', $attendance->id)->delete();
 
-        foreach ($intermissions as $intermission) {
-            $intermission->delete();
-        }
-
-        // 開始・終了nullで入る場合がある・・・・？→バリデーションチェックでNG →NGはNG　4つの欄のうち２，３個使うって言うのは普通にあり得るため
         if ($request->input('intermissions')) {
             foreach ($request->input('intermissions') as $intermission) {
                 if ($intermission['start_at'] && $intermission['finish_at']) {

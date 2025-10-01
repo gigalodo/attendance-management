@@ -14,7 +14,7 @@ class AddAttendancesTable1columns extends Migration
     public function up()
     {
         Schema::table('attendances', function (Blueprint $table) {
-            $table->text('comments')->nullable();
+            $table->text('comments')->nullable()->after('is_approved');
         });
     }
 

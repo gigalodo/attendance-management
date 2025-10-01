@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\RegisterRequest;
 use App\Http\Requests\LoginRequest;
-use Illuminate\Http\Request;
 
 use App\Models\User;
 
@@ -16,7 +15,6 @@ class AuthController extends Controller
 
     public function authenticate(RegisterRequest $request)
     {
-        // $data = $request->validated();
         $data = $request->All();
 
         $user =  User::create([
@@ -32,7 +30,6 @@ class AuthController extends Controller
 
     public function login(LoginRequest $request)
     {
-        // $data = $request->validated();
         $data = $request->All();
 
         if (Auth::attempt([
@@ -50,7 +47,6 @@ class AuthController extends Controller
 
     public function adminLogin(LoginRequest $request)
     {
-        // $data = $request->validated();
         $data = $request->All();
 
         if (Auth::attempt([
@@ -70,16 +66,4 @@ class AuthController extends Controller
     {
         return view('auth.admin_login');
     }
-
-    // public function logout(LoginRequest $request)
-    // {
-
-    //     dd("aaa");
-    //     Auth::guard('web')->logout();
-
-    //     $request->session()->invalidate();
-    //     $request->session()->regenerateToken();
-
-    //     return redirect('/login');
-    // }
 }
