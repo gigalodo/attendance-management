@@ -22,8 +22,7 @@ RUN composer install --no-dev --optimize-autoloader
 RUN chmod -R 775 storage bootstrap/cache
 
 # -------------------------
-# 3. Webサーバとして PHP-FPM を直接公開
-#    Koyeb は Entrypoint で FPM をそのまま扱える
+# 3. Webサーバとして起動
 # -------------------------
 EXPOSE 8000
-CMD ["php-fpm"]
+CMD ["php", "-S", "0.0.0.0:8000", "-t", "public"]
