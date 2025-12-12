@@ -14,7 +14,7 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 # 2. アプリをコピー
 # -------------------------
 WORKDIR /app
-COPY . .
+COPY ./src .
 
 # Laravel インストール
 RUN composer install --no-dev --optimize-autoloader
