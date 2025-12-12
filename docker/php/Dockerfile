@@ -25,5 +25,5 @@ RUN chmod -R 775 storage bootstrap/cache
 # 3. Webサーバとして PHP-FPM を直接公開
 #    Koyeb は Entrypoint で FPM をそのまま扱える
 # -------------------------
-EXPOSE 9000
+EXPOSE 8000
 CMD ["php-fpm"]
