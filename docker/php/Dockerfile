@@ -13,7 +13,7 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 # -------------------------
 # 2. アプリをコピー
 # -------------------------
-WORKDIR /app
+WORKDIR /var/www
 COPY ./src .
 
 # Laravel インストール
